@@ -74,13 +74,13 @@ func (p *Parser) parseNode() ast.Node {
 			HTMLAttributes: attrs,
 		}
 
-		p.nextToken()
-
-		for p.currTokenIs(html.StartTagToken) {
+		for p.peekTokenIs(html.StartTagToken) && !p.peekTokenIs(html.ErrorToken) {
+			p.nextToken()
 			node.HTMLChildren = append(node.HTMLChildren, p.parseNode())
 		}
 
 		if p.peekTokenIs(html.EndTagToken) {
+			p.nextToken()
 			return node
 		}
 	}
