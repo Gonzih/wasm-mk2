@@ -10,6 +10,12 @@ import (
 	"golang.org/x/net/html"
 )
 
+func newTestParser(input string) *Parser {
+	r := strings.NewReader(input)
+	z := html.NewTokenizer(r)
+	return New(z)
+}
+
 func checkParserErrors(t *testing.T, p *Parser) {
 	assert.Len(t, p.Errors(), 0)
 
@@ -24,9 +30,7 @@ func checkParserErrors(t *testing.T, p *Parser) {
 
 func TestNew(t *testing.T) {
 	s := `<div></div>`
-	r := strings.NewReader(s)
-	z := html.NewTokenizer(r)
-	p := New(z)
+	p := newTestParser(s)
 
 	checkParserErrors(t, p)
 
@@ -36,9 +40,7 @@ func TestNew(t *testing.T) {
 
 func TestParseSingleDiv(t *testing.T) {
 	s := `<div></div>`
-	r := strings.NewReader(s)
-	z := html.NewTokenizer(r)
-	p := New(z)
+	p := newTestParser(s)
 	root := p.ParseTree()
 
 	checkParserErrors(t, p)
@@ -50,9 +52,7 @@ func TestParseSingleDiv(t *testing.T) {
 
 func TestParseSingleDivWithAttributes(t *testing.T) {
 	s := `<div class="mydiv"></div>`
-	r := strings.NewReader(s)
-	z := html.NewTokenizer(r)
-	p := New(z)
+	p := newTestParser(s)
 	root := p.ParseTree()
 
 	checkParserErrors(t, p)
