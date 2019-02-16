@@ -37,10 +37,10 @@ func (p *Parser) Errors() []string {
 func (p *Parser) ParseTree() *ast.Root {
 	root := &ast.Root{}
 
-	for !p.curTokenIs(html.ErrorToken) {
+	for !p.currTokenIs(html.ErrorToken) {
 		node := p.parseNode()
 		if node != nil {
-			root.Children = append(root.Children, node)
+			root.HTMLChildren = append(root.HTMLChildren, node)
 		}
 		p.nextToken()
 	}
@@ -48,7 +48,7 @@ func (p *Parser) ParseTree() *ast.Root {
 	return root
 }
 
-func (p *Parser) curTokenIs(tt html.TokenType) bool {
+func (p *Parser) currTokenIs(tt html.TokenType) bool {
 	return p.currToken.Type == tt
 }
 
@@ -57,8 +57,9 @@ func (p *Parser) peekTokenIs(tt html.TokenType) bool {
 }
 
 func (p *Parser) parseNode() ast.Node {
-	if p.curTokenIs(html.StartTagToken) && p.peekTokenIs(html.EndTagToken) {
+	if p.currTokenIs(html.StartTagToken) {
 		attrs := []ast.Attribute{}
+
 		for _, attr := range p.currToken.Attr {
 			at := ast.Attribute{
 				Name:  attr.Key,
@@ -73,7 +74,15 @@ func (p *Parser) parseNode() ast.Node {
 			HTMLAttributes: attrs,
 		}
 
-		return node
+		p.nextToken()
+
+		for p.currTokenIs(html.StartTagToken) {
+			node.HTMLChildren = append(node.HTMLChildren, p.parseNode())
+		}
+
+		if p.peekTokenIs(html.EndTagToken) {
+			return node
+		}
 	}
 
 	return nil
