@@ -58,7 +58,6 @@ func TestParseSingleDivWithAttributes(t *testing.T) {
 	checkParserErrors(t, p)
 
 	assert.Len(t, root.Children(), 1)
-	assert.IsType(t, &ast.Element{}, root.Children()[0])
 	assert.Equal(t, "div", root.Children()[0].Tag())
 	assert.Len(t, root.Children()[0].Attributes(), 1)
 
@@ -75,7 +74,6 @@ func TestParseNestedElements(t *testing.T) {
 	checkParserErrors(t, p)
 
 	assert.Len(t, root.Children(), 1)
-	assert.IsType(t, &ast.Element{}, root.Children()[0])
 	assert.Equal(t, "div", root.Children()[0].Tag())
 	assert.Len(t, root.Children()[0].Children(), 1)
 
@@ -91,7 +89,6 @@ func TestParseMultipleNestedElements(t *testing.T) {
 	checkParserErrors(t, p)
 
 	assert.Len(t, root.Children(), 1)
-	assert.IsType(t, &ast.Element{}, root.Children()[0])
 	assert.Equal(t, "div", root.Children()[0].Tag())
 	assert.Len(t, root.Children()[0].Children(), 2)
 
@@ -100,4 +97,56 @@ func TestParseMultipleNestedElements(t *testing.T) {
 
 	ch2 := root.Children()[0].Children()[1]
 	assert.Equal(t, "a", ch2.Tag())
+}
+
+func TestParseMultipleNestedElementsInRoot(t *testing.T) {
+	s := `<div><p></p><a></a></div><span><div></div></span>`
+	p := newTestParser(s)
+	root := p.ParseTree()
+
+	checkParserErrors(t, p)
+
+	assert.Len(t, root.Children(), 2)
+
+	assert.Equal(t, "div", root.Children()[0].Tag())
+	assert.Len(t, root.Children()[0].Children(), 2)
+
+	assert.Equal(t, "span", root.Children()[1].Tag())
+	assert.Len(t, root.Children()[1].Children(), 1)
+
+	ch := root.Children()[0].Children()[0]
+	assert.Equal(t, "p", ch.Tag())
+	ch = root.Children()[0].Children()[1]
+	assert.Equal(t, "a", ch.Tag())
+
+	ch = root.Children()[1].Children()[0]
+	assert.Equal(t, "div", ch.Tag())
+}
+
+func TestParseSelfClosingElement(t *testing.T) {
+	s := `<img src="http://google.com/"/>`
+	p := newTestParser(s)
+	root := p.ParseTree()
+
+	checkParserErrors(t, p)
+
+	assert.Len(t, root.Children(), 1)
+
+	assert.Equal(t, "img", root.Children()[0].Tag())
+	assert.Len(t, root.Children()[0].Children(), 0)
+}
+
+func TestParseNestedWithSelfClosingElement(t *testing.T) {
+	s := `<div><img src="http://google.com/"/><hr/></div>`
+	p := newTestParser(s)
+	root := p.ParseTree()
+
+	checkParserErrors(t, p)
+
+	assert.Len(t, root.Children(), 1)
+	assert.Len(t, root.Children()[0].Children(), 2)
+
+	assert.Equal(t, "div", root.Children()[0].Tag())
+	assert.Equal(t, "img", root.Children()[0].Children()[0].Tag())
+	assert.Equal(t, "hr", root.Children()[0].Children()[1].Tag())
 }

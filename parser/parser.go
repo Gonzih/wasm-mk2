@@ -57,7 +57,7 @@ func (p *Parser) peekTokenIs(tt html.TokenType) bool {
 }
 
 func (p *Parser) parseNode() ast.Node {
-	if p.currTokenIs(html.StartTagToken) {
+	if p.currTokenIs(html.StartTagToken) || p.currTokenIs(html.SelfClosingTagToken) {
 		attrs := []ast.Attribute{}
 
 		for _, attr := range p.currToken.Attr {
@@ -74,7 +74,11 @@ func (p *Parser) parseNode() ast.Node {
 			HTMLAttributes: attrs,
 		}
 
-		for p.peekTokenIs(html.StartTagToken) && !p.peekTokenIs(html.ErrorToken) {
+		if p.currTokenIs(html.SelfClosingTagToken) {
+			return node
+		}
+
+		for p.peekTokenIs(html.StartTagToken) || p.peekTokenIs(html.SelfClosingTagToken) {
 			p.nextToken()
 			node.HTMLChildren = append(node.HTMLChildren, p.parseNode())
 		}
