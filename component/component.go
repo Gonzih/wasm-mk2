@@ -33,5 +33,6 @@ package component
 // }
 
 type Component struct {
-	Tag string
+	Tag      string
+	Children []Component
 }
