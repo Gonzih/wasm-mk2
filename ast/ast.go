@@ -83,11 +83,3 @@ func (el *Element) indentedString(level int) string {
 
 	return out.String()
 }
-
-// Component represents user defined component
-// type Component struct {
-// }
-
-// func (co *Component) nodeType()               {}
-// func (co *Component) Tag() string             { return "component" }
-// func (co *Component) Attributes() []Attribute { return []Attribute{} }
