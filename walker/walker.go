@@ -35,8 +35,8 @@ func (w *Walker) walkComponent(nodes []ast.Node) []*component.Component {
 
 	for _, astNode := range nodes {
 		cmp := &component.Component{
-			Tag: astNode.Tag(),
-			Children: w.walkComponent(astNode.Children())
+			Tag:      astNode.Tag(),
+			Children: w.walkComponent(astNode.Children()),
 		}
 		cmps = append(cmps, cmp)
 	}

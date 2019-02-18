@@ -40,7 +40,7 @@ func TestBasic(t *testing.T) {
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
-	assert.Equal(t, "div", cmp.Tag)
+	assert.Equal(t, "div", cmp[0].Tag)
 }
 
 func TestNested(t *testing.T) {
@@ -50,7 +50,7 @@ func TestNested(t *testing.T) {
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
-	assert.Equal(t, "div", cmp.Tag)
-	assert.Equal(t, "p", cmp.Children[0].Tag)
-	assert.Equal(t, "a", cmp.Children[1].Tag)
+	assert.Equal(t, "div", cmp[0].Tag)
+	assert.Equal(t, "p", cmp[0].Children[0].Tag)
+	assert.Equal(t, "a", cmp[0].Children[1].Tag)
 }
