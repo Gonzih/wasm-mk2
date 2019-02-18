@@ -19,7 +19,7 @@ type Wrapper struct {
 	instance interface{}
 	setters  map[string]func(interface{}) error
 	getters  map[string]func() interface{}
-	props    []string
+	props    map[string]bool
 }
 
 func Wasmify(comp ComponentInput) (*Wrapper, error) {
@@ -45,6 +45,7 @@ func (w *Wrapper) Instance() (*Wrapper, error) {
 
 	result.getters = make(map[string]func() interface{}, 0)
 	result.setters = make(map[string]func(interface{}) error, 0)
+	result.props = make(map[string]bool, 0)
 
 	result.instance = reflect.New(reflect.ValueOf(result.input).Elem().Type()).Interface()
 	in, ok := result.instance.(ComponentInput)
@@ -121,20 +122,27 @@ func (w *Wrapper) findProps() {
 		tags := strings.Split(ts, ",")
 		for _, tag := range tags {
 			if tag == "prop" {
-				w.props = append(w.props, typeField.Name)
+				w.props[typeField.Name] = true
 			}
 		}
 	}
 }
 
-func (w *Wrapper) IsAProp(name string) bool {
-	for _, prop := range w.props {
-		if prop == name {
-			return true
-		}
-	}
+func (w *Wrapper) Getter(name string) (func() interface{}, bool) {
+	f, ok := w.getters[name]
 
-	return false
+	return f, ok
+}
+
+func (w *Wrapper) Setter(name string) (func(interface{}) error, bool) {
+	f, ok := w.setters[name]
+
+	return f, ok
+}
+
+func (w *Wrapper) IsAProp(name string) bool {
+	_, ok := w.props[name]
+	return ok
 }
 
 type Event struct {
