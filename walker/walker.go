@@ -32,7 +32,13 @@ func (w *Walker) Errors() []string {
 }
 
 func (w *Walker) WalkAST() []tree.Node {
-	return w.walkComponent(w.root.Children(), scope.Empty())
+	components := w.walkComponent(w.root.Children(), scope.Empty())
+
+	for _, cmp := range components {
+		cmp.Notify()
+	}
+
+	return components
 }
 
 func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []tree.Attribute {
@@ -121,8 +127,6 @@ func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tre
 				NodeProps:    w.convertProperties(astNode.Attributes(), currScope),
 				Instance:     instance,
 			}
-
-			cmp.Notify()
 		} else {
 			cmp = &tree.HTMLNode{
 				NodeTag:      tag,
