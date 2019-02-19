@@ -26,7 +26,7 @@ func (c *MyDiv) Init() error {
 }
 
 func (c *MyDiv) HandleClick(e *event.Event) {
-	c.Counter = 200
+	c.Counter += 200
 }
 
 func TestBasic(t *testing.T) {
@@ -44,7 +44,7 @@ func TestBasic(t *testing.T) {
 
 	for _, prop := range child.Props() {
 		if prop.Key() == "data-id" {
-			assert.Equal(t, "200", prop.Value())
+			assert.Equal(t, "211", prop.Value())
 		}
 	}
 
