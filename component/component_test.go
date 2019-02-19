@@ -3,6 +3,7 @@ package component
 import (
 	"testing"
 
+	"github.com/Gonzih/wasm-mk2/event"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +18,7 @@ func (c *MyDiv) Init() error {
 	return nil
 }
 
-func (c *MyDiv) HandleClick(e Event) {
+func (c *MyDiv) HandleClick(e event.Event) {
 	c.Counter++
 }
 

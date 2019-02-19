@@ -2,8 +2,8 @@ package walker
 
 import (
 	"github.com/Gonzih/wasm-mk2/ast"
-	"github.com/Gonzih/wasm-mk2/component"
 	"github.com/Gonzih/wasm-mk2/parser"
+	"github.com/Gonzih/wasm-mk2/tree"
 )
 
 type Walker struct {
@@ -26,15 +26,15 @@ func (w *Walker) Errors() []string {
 	return w.errors
 }
 
-func (w *Walker) WalkAST() []*component.Component {
+func (w *Walker) WalkAST() []*tree.Component {
 	return w.walkComponent(w.root.Children())
 }
 
-func (w *Walker) walkComponent(nodes []ast.Node) []*component.Component {
-	cmps := make([]*component.Component, 0)
+func (w *Walker) walkComponent(nodes []ast.Node) []*tree.Component {
+	cmps := make([]*tree.Component, 0)
 
 	for _, astNode := range nodes {
-		cmp := &component.Component{
+		cmp := &tree.Component{
 			Tag:      astNode.Tag(),
 			Children: w.walkComponent(astNode.Children()),
 		}

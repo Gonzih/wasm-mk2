@@ -144,11 +144,3 @@ func (w *Wrapper) IsAProp(name string) bool {
 	_, ok := w.props[name]
 	return ok
 }
-
-type Event struct {
-}
-
-type Component struct {
-	Tag      string
-	Children []*Component
-}
