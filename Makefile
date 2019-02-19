@@ -3,7 +3,7 @@ autotest:
 	find . -iname '*.go' | entr -r make test
 
 test:
-	echo
-	echo
-	echo
-	go test -v --cover $(SUBDIRS)
+	@echo
+	@echo
+	@echo
+	go test --cover $(SUBDIRS)
