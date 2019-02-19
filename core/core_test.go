@@ -26,7 +26,7 @@ func (c *MyDiv) Init() error {
 
 func TestBasic(t *testing.T) {
 	dom.RegisterMockTemplate("app-root", `<mydiv></mydiv>`)
-	dom.RegisterMockTemplate("mydiv-template", `<div :class="input"></div>`)
+	dom.RegisterMockTemplate("mydiv-template", `<div :class="Input"></div>`)
 	Component(&MyDiv{}, "mydiv", "mydiv-template")
 
 	app := New()

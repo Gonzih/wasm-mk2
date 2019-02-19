@@ -171,7 +171,7 @@ func TestSimpleComponentWithDynamicPropPassing(t *testing.T) {
 	cmpn, ok := node.(*tree.ComponentNode)
 	assert.True(t, ok)
 
-	getter, ok := cmpn.Instance.Getter("data")
+	getter, ok := cmpn.Instance.Getter("Data")
 	assert.True(t, ok)
 	assert.Equal(t, "MyDynamicInput", getter())
 }

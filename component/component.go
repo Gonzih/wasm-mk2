@@ -2,10 +2,13 @@ package component
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"strings"
 
+	"github.com/Gonzih/wasm-mk2/event"
 	"github.com/pkg/errors"
+	uuid "github.com/satori/go.uuid"
 )
 
 const tagKey = "wasm"
@@ -15,14 +18,16 @@ type ComponentInput interface {
 }
 
 type Wrapper struct {
+	uuid     string
 	input    interface{}
 	instance interface{}
 	setters  map[string]func(interface{}) error
 	getters  map[string]func() interface{}
-	props    map[string]bool
+	handlers map[string]func(*event.Event)
+	props    map[string]string
 }
 
-func Wasmify(comp ComponentInput) (*Wrapper, error) {
+func Wasmify(comp interface{}) (*Wrapper, error) {
 	wrapper := &Wrapper{input: comp}
 
 	in := reflect.ValueOf(comp)
@@ -45,7 +50,7 @@ func (w *Wrapper) Instance() (*Wrapper, error) {
 
 	result.getters = make(map[string]func() interface{}, 0)
 	result.setters = make(map[string]func(interface{}) error, 0)
-	result.props = make(map[string]bool, 0)
+	result.props = make(map[string]string, 0)
 
 	result.instance = reflect.New(reflect.ValueOf(result.input).Elem().Type()).Interface()
 	in, ok := result.instance.(ComponentInput)
@@ -66,6 +71,9 @@ func (w *Wrapper) Instance() (*Wrapper, error) {
 	}
 
 	result.findProps()
+	result.findHandlers()
+
+	result.uuid = uuid.NewV4().String()
 
 	return result, nil
 }
@@ -81,7 +89,7 @@ func (w *Wrapper) constructGetters() error {
 			return reflect.ValueOf(w.instance).Elem().FieldByName(name).Interface()
 		}
 
-		w.getters[strings.ToLower(name)] = getter
+		w.getters[name] = getter
 	}
 
 	return nil
@@ -107,7 +115,7 @@ func (w *Wrapper) constructSetters() error {
 			return nil
 		}
 
-		w.setters[strings.ToLower(name)] = setter
+		w.setters[name] = setter
 	}
 
 	return nil
@@ -122,9 +130,22 @@ func (w *Wrapper) findProps() {
 		tags := strings.Split(ts, ",")
 		for _, tag := range tags {
 			if tag == "prop" {
-				w.props[strings.ToLower(typeField.Name)] = true
+				w.props[strings.ToLower(typeField.Name)] = typeField.Name
 			}
 		}
+	}
+}
+
+func (w *Wrapper) findHandlers() {
+	val := reflect.ValueOf(w.instance)
+
+	for i := 0; i < val.NumMethod(); i++ {
+		method := val.Type().Method(i)
+		log.Println(method.Type)
+		log.Println(method.Name)
+		// w.handlers[method.Name] = func(*event.Event) {
+
+		// }
 	}
 }
 
@@ -140,7 +161,15 @@ func (w *Wrapper) Setter(name string) (func(interface{}) error, bool) {
 	return f, ok
 }
 
-func (w *Wrapper) IsAProp(name string) bool {
-	_, ok := w.props[name]
-	return ok
+func (w *Wrapper) IsAProp(name string) (string, bool) {
+	field, ok := w.props[name]
+	return field, ok
+}
+
+func (w *Wrapper) IsAHandler(name string) bool {
+	return false
+}
+
+func (w *Wrapper) UUID() string {
+	return w.uuid
 }

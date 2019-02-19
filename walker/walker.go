@@ -66,9 +66,9 @@ func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []
 
 				var f func() string
 
-				getter, ok := scope.Getter(strings.ToLower(v))
+				getter, ok := scope.Getter(v)
 				if !ok {
-					log.Printf("Could not find getter for %s", v)
+					log.Fatalf("Could not find getter for %s", v)
 					f = func() string {
 						return v
 					}
@@ -84,11 +84,11 @@ func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []
 					}
 				}
 
-				isAProp := scope.Wrapper.IsAProp(k)
+				propName, isAProp := scope.Wrapper.IsAProp(k)
 				if isAProp {
-					setter, ok := scope.Wrapper.Setter(k)
+					setter, ok := scope.Wrapper.Setter(propName)
 					if !ok {
-						log.Fatalf("Could not find setter for %s", k)
+						log.Fatalf("Could not find setter for %s with name %s", k, propName)
 					}
 					prop = &tree.LinkedAttribute{
 						K: k,

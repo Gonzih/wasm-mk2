@@ -6,4 +6,4 @@ test:
 	@echo
 	@echo
 	@echo
-	go test -v --cover $(SUBDIRS)
+	go test -v --cover $(SUBDIRS) && echo SUCCESS || echo FAILURE

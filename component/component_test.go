@@ -52,7 +52,7 @@ func TestGetters(t *testing.T) {
 	wrapper, err := w.Instance()
 	assert.Nil(t, err)
 
-	getter, ok := wrapper.Getter("counter")
+	getter, ok := wrapper.Getter("Counter")
 	assert.True(t, ok)
 	assert.Equal(t, 10, getter())
 }
@@ -64,10 +64,10 @@ func TestGettersAndSetters(t *testing.T) {
 	wrapper, err := w.Instance()
 	assert.Nil(t, err)
 
-	setter, ok := wrapper.Setter("label")
+	setter, ok := wrapper.Setter("Label")
 	assert.True(t, ok)
 
-	getter, ok := wrapper.Getter("label")
+	getter, ok := wrapper.Getter("Label")
 	assert.True(t, ok)
 
 	err = setter(23)
@@ -82,6 +82,19 @@ func TestProps(t *testing.T) {
 	wrapper, err := w.Instance()
 	assert.Nil(t, err)
 
-	assert.True(t, wrapper.IsAProp("label"))
-	assert.False(t, wrapper.IsAProp("counter"))
+	_, ok := wrapper.IsAProp("label")
+	assert.True(t, ok)
+	_, ok = wrapper.IsAProp("counter")
+	assert.False(t, ok)
+	assert.NotEqual(t, "", wrapper.UUID())
+}
+
+func TestHandler(t *testing.T) {
+	w, err := Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+
+	wrapper, err := w.Instance()
+	assert.Nil(t, err)
+
+	assert.True(t, wrapper.IsAHandler("HandleClick"))
 }
