@@ -4,11 +4,25 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Gonzih/wasm-mk2/component"
 	"github.com/Gonzih/wasm-mk2/parser"
+	"github.com/Gonzih/wasm-mk2/registry"
+	"github.com/Gonzih/wasm-mk2/tree"
 	"github.com/stretchr/testify/assert"
 
 	"golang.org/x/net/html"
 )
+
+type MyDiv struct {
+	Input   string `wasm:"prop"`
+	Counter int    `wasm:"state"`
+}
+
+func (c *MyDiv) Init() error {
+	c.Counter = 11
+	c.Input = "MyDynamicInput"
+	return nil
+}
 
 func walkString(t *testing.T, input string) *Walker {
 	r := strings.NewReader(input)
@@ -40,7 +54,7 @@ func TestBasic(t *testing.T) {
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
-	assert.Equal(t, "div", cmp[0].Tag)
+	assert.Equal(t, "div", cmp[0].Tag())
 }
 
 func TestNested(t *testing.T) {
@@ -50,7 +64,55 @@ func TestNested(t *testing.T) {
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
-	assert.Equal(t, "div", cmp[0].Tag)
-	assert.Equal(t, "p", cmp[0].Children[0].Tag)
-	assert.Equal(t, "a", cmp[0].Children[1].Tag)
+	assert.Equal(t, "div", cmp[0].Tag())
+	assert.Equal(t, "p", cmp[0].Children()[0].Tag())
+	assert.Equal(t, "a", cmp[0].Children()[1].Tag())
+}
+
+func TestSimpleComponent(t *testing.T) {
+	wrapper, err := component.Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+
+	registry.Register("mydiv", wrapper)
+
+	input := `<mydiv></mydiv>`
+	w := walkString(t, input)
+	cmp := w.WalkAST()
+	checkWalkErrors(t, w)
+
+	assert.Len(t, cmp, 1)
+	assert.IsType(t, &tree.ComponentNode{}, cmp[0])
+	assert.Equal(t, "mydiv", cmp[0].Tag())
+}
+
+func TestSimpleComponentWithStaticProp(t *testing.T) {
+	wrapper, err := component.Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+
+	registry.Register("mydiv", wrapper)
+
+	input := `<mydiv class="myclass"></mydiv>`
+	w := walkString(t, input)
+	cmp := w.WalkAST()
+	checkWalkErrors(t, w)
+
+	assert.Len(t, cmp, 1)
+	assert.Equal(t, "class", cmp[0].Props()[0].Key())
+	assert.Equal(t, "myclass", cmp[0].Props()[0].Value())
+}
+
+func TestSimpleComponentWithDynamicProp(t *testing.T) {
+	wrapper, err := component.Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+
+	registry.Register("mydiv", wrapper)
+
+	input := `<mydiv :id="Input"></mydiv>`
+	w := walkString(t, input)
+	cmp := w.WalkAST()
+	checkWalkErrors(t, w)
+
+	assert.Len(t, cmp, 1)
+	assert.Equal(t, "id", cmp[0].Props()[0].Key())
+	assert.Equal(t, "MyDynamicInput", cmp[0].Props()[0].Value())
 }
