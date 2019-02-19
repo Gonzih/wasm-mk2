@@ -52,7 +52,7 @@ func TestGetters(t *testing.T) {
 	wrapper, err := w.Instance()
 	assert.Nil(t, err)
 
-	getter, ok := wrapper.Getter("Counter")
+	getter, ok := wrapper.Getter("counter")
 	assert.True(t, ok)
 	assert.Equal(t, 10, getter())
 }
@@ -64,10 +64,10 @@ func TestGettersAndSetters(t *testing.T) {
 	wrapper, err := w.Instance()
 	assert.Nil(t, err)
 
-	setter, ok := wrapper.Setter("Label")
+	setter, ok := wrapper.Setter("label")
 	assert.True(t, ok)
 
-	getter, ok := wrapper.Getter("Label")
+	getter, ok := wrapper.Getter("label")
 	assert.True(t, ok)
 
 	err = setter(23)
@@ -82,6 +82,6 @@ func TestProps(t *testing.T) {
 	wrapper, err := w.Instance()
 	assert.Nil(t, err)
 
-	assert.True(t, wrapper.IsAProp("Label"))
-	assert.False(t, wrapper.IsAProp("Counter"))
+	assert.True(t, wrapper.IsAProp("label"))
+	assert.False(t, wrapper.IsAProp("counter"))
 }

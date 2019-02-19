@@ -151,7 +151,7 @@ func TestSimpleComponentWithDynamicPropPassing(t *testing.T) {
 	assert.Nil(t, err)
 	registry.Register("empty-div", wrapper)
 
-	input := `<mydiv><empty-div :Data="Input"></empty-div></mydiv>`
+	input := `<mydiv><empty-div :data="Input"></empty-div></mydiv>`
 	w := walkString(t, input)
 	cmp := w.WalkAST()
 	checkWalkErrors(t, w)
@@ -160,7 +160,7 @@ func TestSimpleComponentWithDynamicPropPassing(t *testing.T) {
 	cmpn, ok := node.(*tree.ComponentNode)
 	assert.True(t, ok)
 
-	getter, ok := cmpn.Instance.Getter("Data")
+	getter, ok := cmpn.Instance.Getter("data")
 	assert.True(t, ok)
 	assert.Equal(t, "MyDynamicInput", getter())
 }

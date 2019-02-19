@@ -37,11 +37,11 @@ func TestBasicLookup(t *testing.T) {
 	assert.Nil(t, err)
 
 	s := New(wrapper, nil)
-	getter, ok := s.Getter("Counter")
+	getter, ok := s.Getter("counter")
 	assert.True(t, ok)
 	assert.Equal(t, 11, getter())
 
-	getter, ok = s.Getter("Input")
+	getter, ok = s.Getter("input")
 	assert.True(t, ok)
 	assert.Equal(t, "MyDiv", getter())
 }
@@ -59,15 +59,15 @@ func TestRecursiveLookup(t *testing.T) {
 	assert.Nil(t, err)
 	s := New(wrapper, sParent)
 
-	getter, ok := s.Getter("Counter")
+	getter, ok := s.Getter("counter")
 	assert.True(t, ok)
 	assert.Equal(t, 11, getter())
 
-	getter, ok = s.Getter("Num")
+	getter, ok = s.Getter("num")
 	assert.True(t, ok)
 	assert.Equal(t, 99, getter())
 
-	getter, ok = s.Getter("Input")
+	getter, ok = s.Getter("input")
 	assert.True(t, ok)
 	assert.Equal(t, "MyDiv", getter())
 }

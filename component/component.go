@@ -81,7 +81,7 @@ func (w *Wrapper) constructGetters() error {
 			return reflect.ValueOf(w.instance).Elem().FieldByName(name).Interface()
 		}
 
-		w.getters[name] = getter
+		w.getters[strings.ToLower(name)] = getter
 	}
 
 	return nil
@@ -107,7 +107,7 @@ func (w *Wrapper) constructSetters() error {
 			return nil
 		}
 
-		w.setters[name] = setter
+		w.setters[strings.ToLower(name)] = setter
 	}
 
 	return nil
@@ -122,7 +122,7 @@ func (w *Wrapper) findProps() {
 		tags := strings.Split(ts, ",")
 		for _, tag := range tags {
 			if tag == "prop" {
-				w.props[typeField.Name] = true
+				w.props[strings.ToLower(typeField.Name)] = true
 			}
 		}
 	}

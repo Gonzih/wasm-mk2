@@ -36,7 +36,7 @@ func TestBasicInstance(t *testing.T) {
 	wrapper, ok := Instance("MyDiv")
 	assert.True(t, ok)
 
-	getter, ok := wrapper.Getter("Input")
+	getter, ok := wrapper.Getter("input")
 	assert.True(t, ok)
 	assert.Equal(t, "MyDiv", getter())
 }

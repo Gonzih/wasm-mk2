@@ -49,7 +49,7 @@ func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []
 
 				var f func() string
 
-				getter, ok := scope.Getter(v)
+				getter, ok := scope.Getter(strings.ToLower(v))
 				if !ok {
 					log.Printf("Could not find getter for %s", v)
 					f = func() string {
@@ -67,10 +67,26 @@ func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []
 					}
 				}
 
-				prop = &tree.DynamicAttribute{
-					K: k,
-					F: f,
+				isAProp := scope.Wrapper.IsAProp(k)
+				if isAProp {
+					setter, ok := scope.Wrapper.Setter(k)
+					if !ok {
+						log.Fatalf("Could not find setter for %s", k)
+					}
+					prop = &tree.LinkedAttribute{
+						K: k,
+						F: f,
+						Sync: func() {
+							setter(f())
+						},
+					}
+				} else {
+					prop = &tree.DynamicAttribute{
+						K: k,
+						F: f,
+					}
 				}
+
 			} else {
 				log.Print("Instance was nil")
 			}
@@ -105,6 +121,8 @@ func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tre
 				NodeProps:    w.convertProperties(astNode.Attributes(), currScope),
 				Instance:     instance,
 			}
+
+			cmp.Notify()
 		} else {
 			cmp = &tree.HTMLNode{
 				NodeTag:      tag,
