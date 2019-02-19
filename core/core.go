@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -39,8 +40,8 @@ func (a *App) Mount(targetID string) error {
 	z := html.NewTokenizer(r)
 	p := parser.New(z)
 	w := walker.New(p)
-	cmp := w.WalkAST(scope.Empty())
-	log.Println(cmp)
+	cmps := w.WalkAST(scope.Empty())
+	fmt.Printf("Components %#v", cmps)
 
 	return nil
 }

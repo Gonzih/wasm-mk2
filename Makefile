@@ -6,4 +6,4 @@ test:
 	@echo
 	@echo
 	@echo
-	go test --cover $(SUBDIRS)
+	go test -v --cover $(SUBDIRS)
