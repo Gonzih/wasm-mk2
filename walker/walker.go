@@ -5,9 +5,9 @@ import (
 	"strings"
 
 	"github.com/Gonzih/wasm-mk2/ast"
-	"github.com/Gonzih/wasm-mk2/component"
 	"github.com/Gonzih/wasm-mk2/parser"
 	"github.com/Gonzih/wasm-mk2/registry"
+	"github.com/Gonzih/wasm-mk2/scope"
 	"github.com/Gonzih/wasm-mk2/tree"
 )
 
@@ -32,10 +32,10 @@ func (w *Walker) Errors() []string {
 }
 
 func (w *Walker) WalkAST() []tree.Node {
-	return w.walkComponent(w.root.Children())
+	return w.walkComponent(w.root.Children(), scope.Empty())
 }
 
-func (w *Walker) convertProperties(attrs []ast.Attribute, instance *component.Wrapper) []tree.Attribute {
+func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []tree.Attribute {
 	result := make([]tree.Attribute, 0)
 
 	for _, attr := range attrs {
@@ -44,12 +44,12 @@ func (w *Walker) convertProperties(attrs []ast.Attribute, instance *component.Wr
 		v := attr.Value
 
 		if strings.HasPrefix(k, ":") {
-			if instance != nil {
+			if scope != nil {
 				k = strings.Replace(k, ":", "", 1)
 
 				var f func() string
 
-				getter, ok := instance.Getter(v)
+				getter, ok := scope.Getter(v)
 				if !ok {
 					log.Printf("Could not find getter for %s", v)
 					f = func() string {
@@ -87,30 +87,32 @@ func (w *Walker) convertProperties(attrs []ast.Attribute, instance *component.Wr
 	return result
 }
 
-func (w *Walker) walkComponent(nodes []ast.Node) []tree.Node {
+func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tree.Node {
 	cmps := make([]tree.Node, 0)
 
 	for _, astNode := range nodes {
 		var cmp tree.Node
 		tag := astNode.Tag()
-		children := w.walkComponent(astNode.Children())
 		instance, isComponent := registry.Instance(tag)
-		props := w.convertProperties(astNode.Attributes(), instance)
+		currScope := parentScope
 
 		if isComponent {
+			currScope = scope.New(instance, parentScope)
+
 			cmp = &tree.ComponentNode{
 				NodeTag:      tag,
-				NodeChildren: children,
-				NodeProps:    props,
+				NodeChildren: w.walkComponent(astNode.Children(), currScope),
+				NodeProps:    w.convertProperties(astNode.Attributes(), currScope),
 				Instance:     instance,
 			}
 		} else {
 			cmp = &tree.HTMLNode{
 				NodeTag:      tag,
-				NodeChildren: children,
-				NodeProps:    props,
+				NodeChildren: w.walkComponent(astNode.Children(), currScope),
+				NodeProps:    w.convertProperties(astNode.Attributes(), currScope),
 			}
 		}
+
 		cmps = append(cmps, cmp)
 	}
 

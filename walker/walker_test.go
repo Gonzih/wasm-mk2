@@ -13,6 +13,12 @@ import (
 	"golang.org/x/net/html"
 )
 
+type EmptyDiv struct {
+	Data string `wasm:"prop"`
+}
+
+func (c *EmptyDiv) Init() error { return nil }
+
 type MyDiv struct {
 	Input   string `wasm:"prop"`
 	Counter int    `wasm:"state"`
@@ -115,4 +121,46 @@ func TestSimpleComponentWithDynamicProp(t *testing.T) {
 	assert.Len(t, cmp, 1)
 	assert.Equal(t, "id", cmp[0].Props()[0].Key())
 	assert.Equal(t, "MyDynamicInput", cmp[0].Props()[0].Value())
+}
+
+func TestSimpleComponentWithDynamicPropAndNestedScopes(t *testing.T) {
+	wrapper, err := component.Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+	registry.Register("mydiv", wrapper)
+
+	wrapper, err = component.Wasmify(&EmptyDiv{})
+	assert.Nil(t, err)
+	registry.Register("empty-div", wrapper)
+
+	input := `<mydiv><empty-div :class="Input"></empty-div></mydiv>`
+	w := walkString(t, input)
+	cmp := w.WalkAST()
+	checkWalkErrors(t, w)
+
+	assert.Len(t, cmp, 1)
+	assert.Equal(t, "class", cmp[0].Children()[0].Props()[0].Key())
+	assert.Equal(t, "MyDynamicInput", cmp[0].Children()[0].Props()[0].Value())
+}
+
+func TestSimpleComponentWithDynamicPropPassing(t *testing.T) {
+	wrapper, err := component.Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+	registry.Register("mydiv", wrapper)
+
+	wrapper, err = component.Wasmify(&EmptyDiv{})
+	assert.Nil(t, err)
+	registry.Register("empty-div", wrapper)
+
+	input := `<mydiv><empty-div :Data="Input"></empty-div></mydiv>`
+	w := walkString(t, input)
+	cmp := w.WalkAST()
+	checkWalkErrors(t, w)
+
+	node := cmp[0].Children()[0]
+	cmpn, ok := node.(*tree.ComponentNode)
+	assert.True(t, ok)
+
+	getter, ok := cmpn.Instance.Getter("Data")
+	assert.True(t, ok)
+	assert.Equal(t, "MyDynamicInput", getter())
 }
