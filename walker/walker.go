@@ -88,55 +88,12 @@ func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []
 		if strings.HasPrefix(k, ":") {
 			if scope != nil {
 				k = strings.Replace(k, ":", "", 1)
-
-				var f func() string
-
-				getter, ok := scope.Getter(v)
-				if !ok {
-					log.Fatalf("Could not find getter for %s", v)
-					f = func() string {
-						return v
-					}
-				} else {
-					f = func() string {
-						raw := getter()
-						s, ok := raw.(string)
-						if !ok {
-							log.Printf("Could not convert %v in to string", raw)
-						}
-
-						return s
-					}
-				}
-
-				propName, isAProp := scope.Wrapper.IsAProp(k)
-				if isAProp {
-					setter, ok := scope.Wrapper.Setter(propName)
-					if !ok {
-						log.Fatalf("Could not find setter for %s with name %s", k, propName)
-					}
-					prop = &tree.LinkedAttribute{
-						K: k,
-						F: f,
-						Sync: func() {
-							setter(f())
-						},
-					}
-				} else {
-					prop = &tree.DynamicAttribute{
-						K: k,
-						F: f,
-					}
-				}
-
+				prop = newDynamicAttribute(k, v, scope)
 			} else {
 				log.Print("Instance was nil")
 			}
 		} else {
-			prop = &tree.StaticAttribute{
-				K: k,
-				V: v,
-			}
+			prop = newStaticAttribute(k, v)
 		}
 
 		result = append(result, prop)
@@ -187,4 +144,54 @@ func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tre
 	}
 
 	return cmps
+}
+
+func newDynamicAttribute(k, v string, scope *scope.Scope) tree.Attribute {
+	var f func() string
+
+	getter, ok := scope.Getter(v)
+	if !ok {
+		log.Fatalf("Could not find getter for %s", v)
+		f = func() string {
+			return v
+		}
+	} else {
+		f = func() string {
+			raw := getter()
+			s, ok := raw.(string)
+			if !ok {
+				log.Printf("Could not convert %v in to string", raw)
+			}
+
+			return s
+		}
+	}
+
+	propName, isAProp := scope.Wrapper.IsAProp(k)
+
+	if isAProp {
+		setter, ok := scope.Wrapper.Setter(propName)
+		if !ok {
+			log.Fatalf("Could not find setter for %s with name %s", k, propName)
+		}
+		return &tree.LinkedAttribute{
+			K: k,
+			F: f,
+			Sync: func() {
+				setter(f())
+			},
+		}
+	}
+
+	return &tree.DynamicAttribute{
+		K: k,
+		F: f,
+	}
+}
+
+func newStaticAttribute(k, v string) tree.Attribute {
+	return &tree.StaticAttribute{
+		K: k,
+		V: v,
+	}
 }
