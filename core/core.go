@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"log"
 	"strings"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/Gonzih/wasm-mk2/parser"
 	"github.com/Gonzih/wasm-mk2/registry"
 	"github.com/Gonzih/wasm-mk2/scope"
+	"github.com/Gonzih/wasm-mk2/tree"
 	"github.com/Gonzih/wasm-mk2/walker"
 	"golang.org/x/net/html"
 )
@@ -28,6 +28,7 @@ func Component(strukt component.ComponentInput, name, templateID string) {
 }
 
 type App struct {
+	Components []tree.Node
 }
 
 func New() *App {
@@ -40,8 +41,7 @@ func (a *App) Mount(targetID string) error {
 	z := html.NewTokenizer(r)
 	p := parser.New(z)
 	w := walker.New(p)
-	cmps := w.WalkAST(scope.Empty())
-	fmt.Printf("Components %#v", cmps)
+	a.Components = w.WalkAST(scope.Empty())
 
 	return nil
 }

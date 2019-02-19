@@ -1,6 +1,7 @@
 package walker
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -161,6 +162,7 @@ func newDynamicAttribute(k, v string, scope *scope.Scope) tree.Attribute {
 			s, ok := raw.(string)
 			if !ok {
 				log.Printf("Could not convert %v in to string", raw)
+				return fmt.Sprintf("%v", raw)
 			}
 
 			return s
