@@ -181,7 +181,7 @@ func TestSimpleComponentWithChildrenProp(t *testing.T) {
 	assert.Nil(t, err)
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
-	dom.RegisterMockTemplate("mydiv-template", `<div :class="input"></div>`)
+	dom.RegisterMockTemplate("mydiv-template", `<div :class="Input"></div>`)
 
 	input := `<mydiv></mydiv>`
 	dom.RegisterMockTemplate("app-root", input)
