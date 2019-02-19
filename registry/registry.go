@@ -1,13 +1,33 @@
 package registry
 
-// import "github.com/Gonzih/wasm-mk2/component"
+import (
+	"log"
 
-// var registry = make(map[string]*component.ComponentWrapper, 0)
+	"github.com/Gonzih/wasm-mk2/component"
+)
 
-// func Register(name string, wrapper *component.ComponentWrapper) {
-// 	registry[name] = wrapper
-// }
+var registry = make(map[string]*component.Wrapper, 0)
 
-// func Lookup(name string, wrapper *component.ComponentWrapper) (*component.ComponentWrapper, bool) {
-// 	return registry[name]
-// }
+func Register(name string, wrapper *component.Wrapper) {
+	registry[name] = wrapper
+}
+
+func Exists(name string) bool {
+	_, ok := registry[name]
+	return ok
+}
+
+func Instance(name string) (*component.Wrapper, bool) {
+	w, ok := registry[name]
+	if !ok {
+		return nil, ok
+	}
+
+	instance, err := w.Instance()
+	if err != nil {
+		log.Printf("Error creating instance: %s", err)
+		return nil, false
+	}
+
+	return instance, true
+}
