@@ -18,8 +18,11 @@ func (c *MyDiv) Init() error {
 	return nil
 }
 
-func (c *MyDiv) HandleClick(e event.Event) {
+func (c *MyDiv) HandleClick(e *event.Event) {
 	c.Counter++
+}
+
+func (c *MyDiv) OtherMethod() {
 }
 
 func TestBasic(t *testing.T) {
@@ -89,12 +92,35 @@ func TestProps(t *testing.T) {
 	assert.NotEqual(t, "", wrapper.UUID())
 }
 
-func TestHandler(t *testing.T) {
-	w, err := Wasmify(&MyDiv{})
+func TestHandlerLookup(t *testing.T) {
+	in := &MyDiv{}
+	w, err := Wasmify(in)
 	assert.Nil(t, err)
 
 	wrapper, err := w.Instance()
 	assert.Nil(t, err)
 
 	assert.True(t, wrapper.IsAHandler("HandleClick"))
+	assert.False(t, wrapper.IsAHandler("Init"))
+	assert.False(t, wrapper.IsAHandler("OtherMethod"))
+}
+
+func TestHandler(t *testing.T) {
+	in := &MyDiv{}
+	w, err := Wasmify(in)
+	assert.Nil(t, err)
+
+	wrapper, err := w.Instance()
+	assert.Nil(t, err)
+
+	getter, ok := wrapper.Getter("Counter")
+	assert.True(t, ok)
+
+	assert.Equal(t, 10, getter())
+
+	handler, ok := wrapper.Handler("HandleClick")
+	assert.True(t, ok)
+	handler(&event.Event{})
+
+	assert.Equal(t, 11, getter())
 }

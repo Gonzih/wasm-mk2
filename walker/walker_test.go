@@ -5,6 +5,7 @@ import (
 
 	"github.com/Gonzih/wasm-mk2/component"
 	"github.com/Gonzih/wasm-mk2/dom"
+	"github.com/Gonzih/wasm-mk2/event"
 	"github.com/Gonzih/wasm-mk2/registry"
 	"github.com/Gonzih/wasm-mk2/scope"
 	"github.com/Gonzih/wasm-mk2/tree"
@@ -26,6 +27,10 @@ func (c *MyDiv) Init() error {
 	c.Counter = 11
 	c.Input = "MyDynamicInput"
 	return nil
+}
+
+func (c *MyDiv) HandleClick(e *event.Event) {
+	c.Counter += 6
 }
 
 func walkString(t *testing.T, input string) *Walker {
@@ -192,4 +197,30 @@ func TestSimpleComponentWithChildrenProp(t *testing.T) {
 	assert.Len(t, cmp, 1)
 	assert.Len(t, cmp[0].Children(), 1)
 	assert.Equal(t, "div", cmp[0].Children()[0].Tag())
+}
+
+func TestHandlersBasic(t *testing.T) {
+	wrapper, err := component.Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+	registry.Register("mydiv", wrapper)
+	registry.RegisterTemplate("mydiv", "mydiv-template")
+	dom.RegisterMockTemplate("mydiv-template", `<div @click="HandleClick"></div>`)
+
+	input := `<mydiv></mydiv>`
+	dom.RegisterMockTemplate("app-root", input)
+	w := NewByID("app-root")
+	cmp := w.WalkAST(scope.Empty())
+	checkWalkErrors(t, w)
+
+	assert.Len(t, cmp, 1)
+	node := cmp[0]
+	child := cmp[0].Children()[0]
+	assert.True(t, child.Handle("click", &event.Event{}))
+
+	cmpn, ok := node.(*tree.ComponentNode)
+	assert.True(t, ok)
+
+	getter, ok := cmpn.Instance.Getter("Counter")
+	assert.True(t, ok)
+	assert.Equal(t, 17, getter())
 }

@@ -2,7 +2,6 @@ package component
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"strings"
 
@@ -41,6 +40,11 @@ func Wasmify(comp interface{}) (*Wrapper, error) {
 		return nil, errors.New("Wasmify only accepts pointers to structs")
 	}
 
+	_, ok := comp.(ComponentInput)
+	if !ok {
+		return nil, errors.New("Wasmify only accepts structs that implement ComponentInput interface")
+	}
+
 	return wrapper, nil
 }
 
@@ -51,6 +55,7 @@ func (w *Wrapper) Instance() (*Wrapper, error) {
 	result.getters = make(map[string]func() interface{}, 0)
 	result.setters = make(map[string]func(interface{}) error, 0)
 	result.props = make(map[string]string, 0)
+	result.handlers = make(map[string]func(*event.Event), 0)
 
 	result.instance = reflect.New(reflect.ValueOf(result.input).Elem().Type()).Interface()
 	in, ok := result.instance.(ComponentInput)
@@ -141,11 +146,12 @@ func (w *Wrapper) findHandlers() {
 
 	for i := 0; i < val.NumMethod(); i++ {
 		method := val.Type().Method(i)
-		log.Println(method.Type)
-		log.Println(method.Name)
-		// w.handlers[method.Name] = func(*event.Event) {
-
-		// }
+		if strings.HasPrefix(method.Name, "Handle") {
+			w.handlers[method.Name] = func(e *event.Event) {
+				arg := reflect.ValueOf(e)
+				method.Func.Call([]reflect.Value{val, arg})
+			}
+		}
 	}
 }
 
@@ -167,7 +173,13 @@ func (w *Wrapper) IsAProp(name string) (string, bool) {
 }
 
 func (w *Wrapper) IsAHandler(name string) bool {
-	return false
+	_, ok := w.handlers[name]
+	return ok
+}
+
+func (w *Wrapper) Handler(name string) (func(*event.Event), bool) {
+	h, ok := w.handlers[name]
+	return h, ok
 }
 
 func (w *Wrapper) UUID() string {

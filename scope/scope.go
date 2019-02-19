@@ -1,6 +1,9 @@
 package scope
 
-import "github.com/Gonzih/wasm-mk2/component"
+import (
+	"github.com/Gonzih/wasm-mk2/component"
+	"github.com/Gonzih/wasm-mk2/event"
+)
 
 type Scope struct {
 	Parent  *Scope
@@ -30,4 +33,21 @@ func (s *Scope) Getter(name string) (func() interface{}, bool) {
 	}
 
 	return getter, ok
+}
+
+func (s *Scope) Handler(name string) (func(*event.Event), bool) {
+	if s.Wrapper == nil {
+		return nil, false
+	}
+
+	handler, ok := s.Wrapper.Handler(name)
+
+	if !ok {
+		if s.Parent != nil {
+			handler, ok = s.Parent.Handler(name)
+			return handler, ok
+		}
+	}
+
+	return handler, ok
 }

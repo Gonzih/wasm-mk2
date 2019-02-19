@@ -51,6 +51,31 @@ func (w *Walker) WalkAST(s *scope.Scope) []tree.Node {
 
 	return components
 }
+func (w *Walker) convertHandlers(attrs []ast.Attribute, scope *scope.Scope) []*tree.Handler {
+	result := make([]*tree.Handler, 0)
+
+	for _, attr := range attrs {
+		k := attr.Name
+		v := attr.Value
+
+		if strings.HasPrefix(k, "@") {
+			if scope != nil {
+				k = strings.Replace(k, "@", "", 1)
+				handler, ok := scope.Handler(v)
+				if !ok {
+					log.Fatalf("Could not find handler %s", k)
+				}
+
+				result = append(result, &tree.Handler{
+					Key: k,
+					F:   handler,
+				})
+			}
+		}
+	}
+
+	return result
+}
 
 func (w *Walker) convertProperties(attrs []ast.Attribute, scope *scope.Scope) []tree.Attribute {
 	result := make([]tree.Attribute, 0)
@@ -131,10 +156,12 @@ func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tre
 
 		if isComponent {
 			currScope = scope.New(instance, parentScope)
+
 			templateID, ok := registry.TemplateID(tag)
 			if !ok {
 				log.Fatalf("Could not find template for %s", tag)
 			}
+
 			innerWalker := NewByID(templateID)
 			ast := innerWalker.WalkAST(currScope)
 			w.errors = append(w.errors, innerWalker.Errors()...)
@@ -144,6 +171,7 @@ func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tre
 				NodeChildren: ast,
 				NodeBody:     w.walkComponent(astNode.Children(), currScope),
 				NodeProps:    w.convertProperties(astNode.Attributes(), currScope),
+				NodeHandlers: w.convertHandlers(astNode.Attributes(), currScope),
 				Instance:     instance,
 			}
 		} else {
@@ -151,6 +179,7 @@ func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tre
 				NodeTag:      tag,
 				NodeChildren: w.walkComponent(astNode.Children(), currScope),
 				NodeProps:    w.convertProperties(astNode.Attributes(), currScope),
+				NodeHandlers: w.convertHandlers(astNode.Attributes(), currScope),
 			}
 		}
 

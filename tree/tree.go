@@ -1,6 +1,9 @@
 package tree
 
-import "github.com/Gonzih/wasm-mk2/component"
+import (
+	"github.com/Gonzih/wasm-mk2/component"
+	"github.com/Gonzih/wasm-mk2/event"
+)
 
 type Node interface {
 	Tag() string
@@ -9,6 +12,7 @@ type Node interface {
 	Props() []Attribute
 	Refresh()
 	Notify()
+	Handle(string, *event.Event) bool
 }
 
 type Attribute interface {
@@ -46,6 +50,7 @@ func (p *LinkedAttribute) Value() string { return p.F() }
 func (p *LinkedAttribute) Refresh()      { p.Sync() }
 
 type HTMLNode struct {
+	NodeHandlers []*Handler
 	NodeTag      string
 	NodeChildren []Node
 	NodeProps    []Attribute
@@ -58,7 +63,19 @@ func (n *HTMLNode) Props() []Attribute { return n.NodeProps }
 func (n *HTMLNode) Refresh()           {}
 func (n *HTMLNode) Notify()            {}
 
+func (n *HTMLNode) Handle(name string, e *event.Event) bool {
+	for _, handle := range n.NodeHandlers {
+		if handle.Key == name {
+			handle.F(e)
+			return true
+		}
+	}
+
+	return false
+}
+
 type ComponentNode struct {
+	NodeHandlers []*Handler
 	NodeTag      string
 	NodeChildren []Node
 	NodeBody     []Node
@@ -82,7 +99,23 @@ func (n *ComponentNode) Refresh() {
 	n.Notify()
 }
 
+func (n *ComponentNode) Handle(name string, e *event.Event) bool {
+	for _, handle := range n.NodeHandlers {
+		if handle.Key == name {
+			handle.F(e)
+			return true
+		}
+	}
+
+	return false
+}
+
 func (n *ComponentNode) Tag() string        { return n.NodeTag }
 func (n *ComponentNode) Children() []Node   { return n.NodeChildren }
 func (n *ComponentNode) Body() []Node       { return n.NodeBody }
 func (n *ComponentNode) Props() []Attribute { return n.NodeProps }
+
+type Handler struct {
+	Key string
+	F   func(*event.Event)
+}

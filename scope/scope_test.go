@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/Gonzih/wasm-mk2/component"
+	"github.com/Gonzih/wasm-mk2/event"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,6 +28,10 @@ func (c *MyDivTwo) Init() error {
 	c.Num = 99
 	c.Input = "MyDivTwo"
 	return nil
+}
+
+func (c *MyDivTwo) HandleClick(e *event.Event) {
+	c.Num = 1999
 }
 
 func TestBasicLookup(t *testing.T) {
@@ -59,15 +64,11 @@ func TestRecursiveLookup(t *testing.T) {
 	assert.Nil(t, err)
 	s := New(wrapper, sParent)
 
-	getter, ok := s.Getter("Counter")
+	handler, ok := s.Handler("HandleClick")
 	assert.True(t, ok)
-	assert.Equal(t, 11, getter())
+	handler(&event.Event{})
 
-	getter, ok = s.Getter("Num")
+	getter, ok := s.Getter("Num")
 	assert.True(t, ok)
-	assert.Equal(t, 99, getter())
-
-	getter, ok = s.Getter("Input")
-	assert.True(t, ok)
-	assert.Equal(t, "MyDiv", getter())
+	assert.Equal(t, 1999, getter())
 }
