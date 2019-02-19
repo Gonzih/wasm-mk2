@@ -7,9 +7,14 @@ import (
 )
 
 var registry = make(map[string]*component.Wrapper, 0)
+var templateRegistry = make(map[string]string, 0)
 
 func Register(name string, wrapper *component.Wrapper) {
 	registry[name] = wrapper
+}
+
+func RegisterTemplate(name, templateID string) {
+	templateRegistry[name] = templateID
 }
 
 func Exists(name string) bool {
@@ -30,4 +35,9 @@ func Instance(name string) (*component.Wrapper, bool) {
 	}
 
 	return instance, true
+}
+
+func TemplateID(name string) (string, bool) {
+	templateID, ok := templateRegistry[name]
+	return templateID, ok
 }

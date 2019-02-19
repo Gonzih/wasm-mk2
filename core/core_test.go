@@ -3,9 +3,7 @@ package core
 import (
 	"testing"
 
-	"github.com/Gonzih/wasm-mk2/component"
 	"github.com/Gonzih/wasm-mk2/dom"
-	"github.com/Gonzih/wasm-mk2/registry"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -27,10 +25,12 @@ func (c *MyDiv) Init() error {
 }
 
 func TestBasic(t *testing.T) {
-	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
-	registry.Register("mydiv", wrapper)
+	dom.RegisterMockTemplate("app-root", `<mydiv></mydiv>`)
+	dom.RegisterMockTemplate("mydiv-template", `<div :class="input"></div>`)
+	Component(&MyDiv{}, "mydiv", "mydiv-template")
 
-	input := `<mydiv></mydiv>`
-	dom.RegisterMockTemplate("mydiv", input)
+	app := New()
+	err := app.Mount("app-root")
+
+	assert.Nil(t, err)
 }

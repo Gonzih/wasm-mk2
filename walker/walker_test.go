@@ -1,16 +1,14 @@
 package walker
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/Gonzih/wasm-mk2/component"
-	"github.com/Gonzih/wasm-mk2/parser"
+	"github.com/Gonzih/wasm-mk2/dom"
 	"github.com/Gonzih/wasm-mk2/registry"
+	"github.com/Gonzih/wasm-mk2/scope"
 	"github.com/Gonzih/wasm-mk2/tree"
 	"github.com/stretchr/testify/assert"
-
-	"golang.org/x/net/html"
 )
 
 type EmptyDiv struct {
@@ -31,10 +29,8 @@ func (c *MyDiv) Init() error {
 }
 
 func walkString(t *testing.T, input string) *Walker {
-	r := strings.NewReader(input)
-	z := html.NewTokenizer(r)
-	p := parser.New(z)
-	w := New(p)
+	dom.RegisterMockTemplate("app-root", input)
+	w := NewByID("app-root")
 
 	checkWalkErrors(t, w)
 
@@ -56,7 +52,7 @@ func checkWalkErrors(t *testing.T, w *Walker) {
 func TestBasic(t *testing.T) {
 	input := `<div></div>`
 	w := walkString(t, input)
-	cmp := w.WalkAST()
+	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
@@ -66,7 +62,7 @@ func TestBasic(t *testing.T) {
 func TestNested(t *testing.T) {
 	input := `<div><p></p><a></a></div>`
 	w := walkString(t, input)
-	cmp := w.WalkAST()
+	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
@@ -80,10 +76,12 @@ func TestSimpleComponent(t *testing.T) {
 	assert.Nil(t, err)
 
 	registry.Register("mydiv", wrapper)
+	registry.RegisterTemplate("mydiv", "mydiv-template")
+	dom.RegisterMockTemplate("mydiv-template", `<div></div>`)
 
 	input := `<mydiv></mydiv>`
 	w := walkString(t, input)
-	cmp := w.WalkAST()
+	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
@@ -96,10 +94,12 @@ func TestSimpleComponentWithStaticProp(t *testing.T) {
 	assert.Nil(t, err)
 
 	registry.Register("mydiv", wrapper)
+	registry.RegisterTemplate("mydiv", "mydiv-template")
+	dom.RegisterMockTemplate("mydiv-template", `<div></div>`)
 
 	input := `<mydiv class="myclass"></mydiv>`
 	w := walkString(t, input)
-	cmp := w.WalkAST()
+	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
@@ -112,10 +112,12 @@ func TestSimpleComponentWithDynamicProp(t *testing.T) {
 	assert.Nil(t, err)
 
 	registry.Register("mydiv", wrapper)
+	registry.RegisterTemplate("mydiv", "mydiv-template")
+	dom.RegisterMockTemplate("mydiv-template", `<div></div>`)
 
 	input := `<mydiv :id="Input"></mydiv>`
 	w := walkString(t, input)
-	cmp := w.WalkAST()
+	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
@@ -127,40 +129,67 @@ func TestSimpleComponentWithDynamicPropAndNestedScopes(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
 	assert.Nil(t, err)
 	registry.Register("mydiv", wrapper)
+	registry.RegisterTemplate("mydiv", "mydiv-template")
+	dom.RegisterMockTemplate("mydiv-template", `<div></div>`)
 
 	wrapper, err = component.Wasmify(&EmptyDiv{})
 	assert.Nil(t, err)
 	registry.Register("empty-div", wrapper)
+	registry.RegisterTemplate("empty-div", "empty-div-template")
+	dom.RegisterMockTemplate("empty-div-template", `<div></div>`)
 
 	input := `<mydiv><empty-div :class="Input"></empty-div></mydiv>`
 	w := walkString(t, input)
-	cmp := w.WalkAST()
+	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
 	assert.Len(t, cmp, 1)
-	assert.Equal(t, "class", cmp[0].Children()[0].Props()[0].Key())
-	assert.Equal(t, "MyDynamicInput", cmp[0].Children()[0].Props()[0].Value())
+	assert.Equal(t, "class", cmp[0].Body()[0].Props()[0].Key())
+	assert.Equal(t, "MyDynamicInput", cmp[0].Body()[0].Props()[0].Value())
 }
 
 func TestSimpleComponentWithDynamicPropPassing(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
 	assert.Nil(t, err)
 	registry.Register("mydiv", wrapper)
+	registry.RegisterTemplate("mydiv", "mydiv-template")
+	dom.RegisterMockTemplate("mydiv-template", `<div></div>`)
 
 	wrapper, err = component.Wasmify(&EmptyDiv{})
 	assert.Nil(t, err)
 	registry.Register("empty-div", wrapper)
+	registry.RegisterTemplate("empty-div", "empty-div-template")
+	dom.RegisterMockTemplate("empty-div-template", `<div></div>`)
 
 	input := `<mydiv><empty-div :data="Input"></empty-div></mydiv>`
-	w := walkString(t, input)
-	cmp := w.WalkAST()
+	dom.RegisterMockTemplate("app-root", input)
+	w := NewByID("app-root")
+	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	node := cmp[0].Children()[0]
+	node := cmp[0].Body()[0]
 	cmpn, ok := node.(*tree.ComponentNode)
 	assert.True(t, ok)
 
 	getter, ok := cmpn.Instance.Getter("data")
 	assert.True(t, ok)
 	assert.Equal(t, "MyDynamicInput", getter())
+}
+
+func TestSimpleComponentWithChildrenProp(t *testing.T) {
+	wrapper, err := component.Wasmify(&MyDiv{})
+	assert.Nil(t, err)
+	registry.Register("mydiv", wrapper)
+	registry.RegisterTemplate("mydiv", "mydiv-template")
+	dom.RegisterMockTemplate("mydiv-template", `<div :class="input"></div>`)
+
+	input := `<mydiv></mydiv>`
+	dom.RegisterMockTemplate("app-root", input)
+	w := NewByID("app-root")
+	cmp := w.WalkAST(scope.Empty())
+	checkWalkErrors(t, w)
+
+	assert.Len(t, cmp, 1)
+	assert.Len(t, cmp[0].Children(), 1)
+	assert.Equal(t, "div", cmp[0].Children()[0].Tag())
 }

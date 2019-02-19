@@ -40,3 +40,10 @@ func TestBasicInstance(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "MyDiv", getter())
 }
+
+func TestBasicTemplateID(t *testing.T) {
+	RegisterTemplate("mydiv", "mydiv-template")
+	id, ok := TemplateID("mydiv")
+	assert.True(t, ok)
+	assert.Equal(t, "mydiv-template", id)
+}

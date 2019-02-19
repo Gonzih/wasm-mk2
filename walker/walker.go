@@ -5,16 +5,27 @@ import (
 	"strings"
 
 	"github.com/Gonzih/wasm-mk2/ast"
+	"github.com/Gonzih/wasm-mk2/dom"
 	"github.com/Gonzih/wasm-mk2/parser"
 	"github.com/Gonzih/wasm-mk2/registry"
 	"github.com/Gonzih/wasm-mk2/scope"
 	"github.com/Gonzih/wasm-mk2/tree"
+	"golang.org/x/net/html"
 )
 
 type Walker struct {
 	parser *parser.Parser
 	root   *ast.Root
 	errors []string
+}
+
+func NewByID(templateID string) *Walker {
+	input := dom.New().TemplateContent(templateID)
+	r := strings.NewReader(input)
+	z := html.NewTokenizer(r)
+	p := parser.New(z)
+
+	return New(p)
 }
 
 func New(p *parser.Parser) *Walker {
@@ -31,8 +42,8 @@ func (w *Walker) Errors() []string {
 	return w.errors
 }
 
-func (w *Walker) WalkAST() []tree.Node {
-	components := w.walkComponent(w.root.Children(), scope.Empty())
+func (w *Walker) WalkAST(s *scope.Scope) []tree.Node {
+	components := w.walkComponent(w.root.Children(), s)
 
 	for _, cmp := range components {
 		cmp.Notify()
@@ -120,10 +131,18 @@ func (w *Walker) walkComponent(nodes []ast.Node, parentScope *scope.Scope) []tre
 
 		if isComponent {
 			currScope = scope.New(instance, parentScope)
+			templateID, ok := registry.TemplateID(tag)
+			if !ok {
+				log.Fatalf("Could not find template for %s", tag)
+			}
+			innerWalker := NewByID(templateID)
+			ast := innerWalker.WalkAST(currScope)
+			w.errors = append(w.errors, innerWalker.Errors()...)
 
 			cmp = &tree.ComponentNode{
 				NodeTag:      tag,
-				NodeChildren: w.walkComponent(astNode.Children(), currScope),
+				NodeChildren: ast,
+				NodeBody:     w.walkComponent(astNode.Children(), currScope),
 				NodeProps:    w.convertProperties(astNode.Attributes(), currScope),
 				Instance:     instance,
 			}
