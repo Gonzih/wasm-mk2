@@ -33,6 +33,10 @@ func Component(strukt component.ComponentInput, name, templateID string) {
 type App struct {
 }
 
-func Mount(targetID string) *App {
+func New(targetID string) *App {
 	return &App{}
+}
+
+func (a *App) Mount(targetID string) error {
+	return nil
 }
