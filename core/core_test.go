@@ -5,7 +5,7 @@ import (
 
 	"github.com/Gonzih/wasm-mk2/dom"
 	"github.com/Gonzih/wasm-mk2/event"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type EmptyDiv struct {
@@ -37,16 +37,16 @@ func TestBasic(t *testing.T) {
 	app := New()
 	err := app.Mount("app-root")
 
-	assert.Len(t, app.Components, 1)
+	require.Len(t, app.Components, 1)
 
 	child := app.Components[0].Children()[0]
-	assert.True(t, child.Handle("click", &event.Event{}))
+	require.True(t, child.Handle("click", &event.Event{}))
 
 	for _, prop := range child.Props() {
 		if prop.Key() == "data-id" {
-			assert.Equal(t, "211", prop.Value())
+			require.Equal(t, "211", prop.Value())
 		}
 	}
 
-	assert.Nil(t, err)
+	require.Nil(t, err)
 }

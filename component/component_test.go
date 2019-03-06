@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/Gonzih/wasm-mk2/event"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MyDiv struct {
@@ -27,100 +27,100 @@ func (c *MyDiv) OtherMethod() {
 
 func TestBasic(t *testing.T) {
 	_, err := Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 }
 
 func TestInstance(t *testing.T) {
 	initial := &MyDiv{Counter: 5}
 	wrapper, err := Wasmify(initial)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	newWrapper, err := wrapper.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	md, ok := newWrapper.instance.(*MyDiv)
 
-	assert.True(t, ok)
+	require.True(t, ok)
 
 	if ok {
-		assert.Equal(t, 10, md.Counter)
-		assert.Equal(t, 5, initial.Counter)
+		require.Equal(t, 10, md.Counter)
+		require.Equal(t, 5, initial.Counter)
 	}
 }
 
 func TestGetters(t *testing.T) {
 	w, err := Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	wrapper, err := w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	getter, ok := wrapper.Getter("Counter")
-	assert.True(t, ok)
-	assert.Equal(t, 10, getter())
+	require.True(t, ok)
+	require.Equal(t, 10, getter())
 }
 
 func TestGettersAndSetters(t *testing.T) {
 	w, err := Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	wrapper, err := w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	setter, ok := wrapper.Setter("Label")
-	assert.True(t, ok)
+	require.True(t, ok)
 
 	getter, ok := wrapper.Getter("Label")
-	assert.True(t, ok)
+	require.True(t, ok)
 
 	err = setter(23)
-	assert.Nil(t, err)
-	assert.Equal(t, 23, getter())
+	require.Nil(t, err)
+	require.Equal(t, 23, getter())
 }
 
 func TestProps(t *testing.T) {
 	w, err := Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	wrapper, err := w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	_, ok := wrapper.IsAProp("label")
-	assert.True(t, ok)
+	require.True(t, ok)
 	_, ok = wrapper.IsAProp("counter")
-	assert.False(t, ok)
-	assert.NotEqual(t, "", wrapper.UUID())
+	require.False(t, ok)
+	require.NotEqual(t, "", wrapper.UUID())
 }
 
 func TestHandlerLookup(t *testing.T) {
 	in := &MyDiv{}
 	w, err := Wasmify(in)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	wrapper, err := w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
-	assert.True(t, wrapper.IsAHandler("HandleClick"))
-	assert.False(t, wrapper.IsAHandler("Init"))
-	assert.False(t, wrapper.IsAHandler("OtherMethod"))
+	require.True(t, wrapper.IsAHandler("HandleClick"))
+	require.False(t, wrapper.IsAHandler("Init"))
+	require.False(t, wrapper.IsAHandler("OtherMethod"))
 }
 
 func TestHandler(t *testing.T) {
 	in := &MyDiv{}
 	w, err := Wasmify(in)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	wrapper, err := w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	getter, ok := wrapper.Getter("Counter")
-	assert.True(t, ok)
+	require.True(t, ok)
 
-	assert.Equal(t, 10, getter())
+	require.Equal(t, 10, getter())
 
 	handler, ok := wrapper.Handler("HandleClick")
-	assert.True(t, ok)
+	require.True(t, ok)
 	handler(&event.Event{})
 
-	assert.Equal(t, 11, getter())
+	require.Equal(t, 11, getter())
 }

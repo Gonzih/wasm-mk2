@@ -9,7 +9,7 @@ import (
 	"github.com/Gonzih/wasm-mk2/registry"
 	"github.com/Gonzih/wasm-mk2/scope"
 	"github.com/Gonzih/wasm-mk2/tree"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type EmptyDiv struct {
@@ -43,7 +43,7 @@ func walkString(t *testing.T, input string) *Walker {
 }
 
 func checkWalkErrors(t *testing.T, w *Walker) {
-	assert.Len(t, w.Errors(), 0)
+	require.Len(t, w.Errors(), 0)
 
 	for _, e := range w.Errors() {
 		t.Error(e)
@@ -60,8 +60,8 @@ func TestBasic(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
-	assert.Equal(t, "div", cmp[0].Tag())
+	require.Len(t, cmp, 1)
+	require.Equal(t, "div", cmp[0].Tag())
 }
 
 func TestNested(t *testing.T) {
@@ -70,15 +70,15 @@ func TestNested(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
-	assert.Equal(t, "div", cmp[0].Tag())
-	assert.Equal(t, "p", cmp[0].Children()[0].Tag())
-	assert.Equal(t, "a", cmp[0].Children()[1].Tag())
+	require.Len(t, cmp, 1)
+	require.Equal(t, "div", cmp[0].Tag())
+	require.Equal(t, "p", cmp[0].Children()[0].Tag())
+	require.Equal(t, "a", cmp[0].Children()[1].Tag())
 }
 
 func TestSimpleComponent(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
@@ -89,14 +89,14 @@ func TestSimpleComponent(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
-	assert.IsType(t, &tree.ComponentNode{}, cmp[0])
-	assert.Equal(t, "mydiv", cmp[0].Tag())
+	require.Len(t, cmp, 1)
+	require.IsType(t, &tree.ComponentNode{}, cmp[0])
+	require.Equal(t, "mydiv", cmp[0].Tag())
 }
 
 func TestSimpleComponentWithStaticProp(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
@@ -107,14 +107,14 @@ func TestSimpleComponentWithStaticProp(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
-	assert.Equal(t, "class", cmp[0].Props()[0].Key())
-	assert.Equal(t, "myclass", cmp[0].Props()[0].Value())
+	require.Len(t, cmp, 1)
+	require.Equal(t, "class", cmp[0].Props()[0].Key())
+	require.Equal(t, "myclass", cmp[0].Props()[0].Value())
 }
 
 func TestSimpleComponentWithDynamicProp(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
@@ -125,20 +125,20 @@ func TestSimpleComponentWithDynamicProp(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
-	assert.Equal(t, "id", cmp[0].Props()[0].Key())
-	assert.Equal(t, "MyDynamicInput", cmp[0].Props()[0].Value())
+	require.Len(t, cmp, 1)
+	require.Equal(t, "id", cmp[0].Props()[0].Key())
+	require.Equal(t, "MyDynamicInput", cmp[0].Props()[0].Value())
 }
 
 func TestSimpleComponentWithDynamicPropAndNestedScopes(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
 	dom.RegisterMockTemplate("mydiv-template", `<div></div>`)
 
 	wrapper, err = component.Wasmify(&EmptyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	registry.Register("empty-div", wrapper)
 	registry.RegisterTemplate("empty-div", "empty-div-template")
 	dom.RegisterMockTemplate("empty-div-template", `<div></div>`)
@@ -148,20 +148,20 @@ func TestSimpleComponentWithDynamicPropAndNestedScopes(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
-	assert.Equal(t, "class", cmp[0].Body()[0].Props()[0].Key())
-	assert.Equal(t, "MyDynamicInput", cmp[0].Body()[0].Props()[0].Value())
+	require.Len(t, cmp, 1)
+	require.Equal(t, "class", cmp[0].Body()[0].Props()[0].Key())
+	require.Equal(t, "MyDynamicInput", cmp[0].Body()[0].Props()[0].Value())
 }
 
 func TestSimpleComponentWithDynamicPropPassing(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
 	dom.RegisterMockTemplate("mydiv-template", `<div></div>`)
 
 	wrapper, err = component.Wasmify(&EmptyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	registry.Register("empty-div", wrapper)
 	registry.RegisterTemplate("empty-div", "empty-div-template")
 	dom.RegisterMockTemplate("empty-div-template", `<div></div>`)
@@ -174,16 +174,16 @@ func TestSimpleComponentWithDynamicPropPassing(t *testing.T) {
 
 	node := cmp[0].Body()[0]
 	cmpn, ok := node.(*tree.ComponentNode)
-	assert.True(t, ok)
+	require.True(t, ok)
 
 	getter, ok := cmpn.Instance.Getter("Data")
-	assert.True(t, ok)
-	assert.Equal(t, "MyDynamicInput", getter())
+	require.True(t, ok)
+	require.Equal(t, "MyDynamicInput", getter())
 }
 
 func TestSimpleComponentWithChildrenProp(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
 	dom.RegisterMockTemplate("mydiv-template", `<div :class="Input"></div>`)
@@ -194,14 +194,14 @@ func TestSimpleComponentWithChildrenProp(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
-	assert.Len(t, cmp[0].Children(), 1)
-	assert.Equal(t, "div", cmp[0].Children()[0].Tag())
+	require.Len(t, cmp, 1)
+	require.Len(t, cmp[0].Children(), 1)
+	require.Equal(t, "div", cmp[0].Children()[0].Tag())
 }
 
 func TestHandlersBasic(t *testing.T) {
 	wrapper, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	registry.Register("mydiv", wrapper)
 	registry.RegisterTemplate("mydiv", "mydiv-template")
 	dom.RegisterMockTemplate("mydiv-template", `<div @click="HandleClick"></div>`)
@@ -212,15 +212,15 @@ func TestHandlersBasic(t *testing.T) {
 	cmp := w.WalkAST(scope.Empty())
 	checkWalkErrors(t, w)
 
-	assert.Len(t, cmp, 1)
+	require.Len(t, cmp, 1)
 	node := cmp[0]
 	child := cmp[0].Children()[0]
-	assert.True(t, child.Handle("click", &event.Event{}))
+	require.True(t, child.Handle("click", &event.Event{}))
 
 	cmpn, ok := node.(*tree.ComponentNode)
-	assert.True(t, ok)
+	require.True(t, ok)
 
 	getter, ok := cmpn.Instance.Getter("Counter")
-	assert.True(t, ok)
-	assert.Equal(t, 17, getter())
+	require.True(t, ok)
+	require.Equal(t, 17, getter())
 }

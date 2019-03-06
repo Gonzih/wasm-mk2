@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/Gonzih/wasm-mk2/ast"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"golang.org/x/net/html"
 )
@@ -17,7 +17,7 @@ func newTestParser(input string) *Parser {
 }
 
 func checkParserErrors(t *testing.T, p *Parser) {
-	assert.Len(t, p.Errors(), 0)
+	require.Len(t, p.Errors(), 0)
 
 	for _, e := range p.Errors() {
 		t.Error(e)
@@ -34,8 +34,8 @@ func TestNew(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Equal(t, html.StartTagToken, p.currToken.Type)
-	assert.Equal(t, html.EndTagToken, p.peekToken.Type)
+	require.Equal(t, html.StartTagToken, p.currToken.Type)
+	require.Equal(t, html.EndTagToken, p.peekToken.Type)
 }
 
 func TestParseSingleDiv(t *testing.T) {
@@ -45,9 +45,9 @@ func TestParseSingleDiv(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Len(t, root.Children(), 1)
-	assert.IsType(t, &ast.Element{}, root.Children()[0])
-	assert.Equal(t, "div", root.Children()[0].Tag())
+	require.Len(t, root.Children(), 1)
+	require.IsType(t, &ast.Element{}, root.Children()[0])
+	require.Equal(t, "div", root.Children()[0].Tag())
 }
 
 func TestParseSingleDivWithAttributes(t *testing.T) {
@@ -57,13 +57,13 @@ func TestParseSingleDivWithAttributes(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Len(t, root.Children(), 1)
-	assert.Equal(t, "div", root.Children()[0].Tag())
-	assert.Len(t, root.Children()[0].Attributes(), 1)
+	require.Len(t, root.Children(), 1)
+	require.Equal(t, "div", root.Children()[0].Tag())
+	require.Len(t, root.Children()[0].Attributes(), 1)
 
 	at := root.Children()[0].Attributes()[0]
-	assert.Equal(t, "class", at.Name)
-	assert.Equal(t, "mydiv", at.Value)
+	require.Equal(t, "class", at.Name)
+	require.Equal(t, "mydiv", at.Value)
 }
 
 func TestParseNestedElements(t *testing.T) {
@@ -73,12 +73,12 @@ func TestParseNestedElements(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Len(t, root.Children(), 1)
-	assert.Equal(t, "div", root.Children()[0].Tag())
-	assert.Len(t, root.Children()[0].Children(), 1)
+	require.Len(t, root.Children(), 1)
+	require.Equal(t, "div", root.Children()[0].Tag())
+	require.Len(t, root.Children()[0].Children(), 1)
 
 	ch := root.Children()[0].Children()[0]
-	assert.Equal(t, "p", ch.Tag())
+	require.Equal(t, "p", ch.Tag())
 }
 
 func TestParseMultipleNestedElements(t *testing.T) {
@@ -88,15 +88,15 @@ func TestParseMultipleNestedElements(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Len(t, root.Children(), 1)
-	assert.Equal(t, "div", root.Children()[0].Tag())
-	assert.Len(t, root.Children()[0].Children(), 2)
+	require.Len(t, root.Children(), 1)
+	require.Equal(t, "div", root.Children()[0].Tag())
+	require.Len(t, root.Children()[0].Children(), 2)
 
 	ch1 := root.Children()[0].Children()[0]
-	assert.Equal(t, "p", ch1.Tag())
+	require.Equal(t, "p", ch1.Tag())
 
 	ch2 := root.Children()[0].Children()[1]
-	assert.Equal(t, "a", ch2.Tag())
+	require.Equal(t, "a", ch2.Tag())
 }
 
 func TestParseMultipleNestedElementsInRoot(t *testing.T) {
@@ -106,21 +106,21 @@ func TestParseMultipleNestedElementsInRoot(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Len(t, root.Children(), 2)
+	require.Len(t, root.Children(), 2)
 
-	assert.Equal(t, "div", root.Children()[0].Tag())
-	assert.Len(t, root.Children()[0].Children(), 2)
+	require.Equal(t, "div", root.Children()[0].Tag())
+	require.Len(t, root.Children()[0].Children(), 2)
 
-	assert.Equal(t, "span", root.Children()[1].Tag())
-	assert.Len(t, root.Children()[1].Children(), 1)
+	require.Equal(t, "span", root.Children()[1].Tag())
+	require.Len(t, root.Children()[1].Children(), 1)
 
 	ch := root.Children()[0].Children()[0]
-	assert.Equal(t, "p", ch.Tag())
+	require.Equal(t, "p", ch.Tag())
 	ch = root.Children()[0].Children()[1]
-	assert.Equal(t, "a", ch.Tag())
+	require.Equal(t, "a", ch.Tag())
 
 	ch = root.Children()[1].Children()[0]
-	assert.Equal(t, "div", ch.Tag())
+	require.Equal(t, "div", ch.Tag())
 }
 
 func TestParseSelfClosingElement(t *testing.T) {
@@ -130,10 +130,10 @@ func TestParseSelfClosingElement(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Len(t, root.Children(), 1)
+	require.Len(t, root.Children(), 1)
 
-	assert.Equal(t, "img", root.Children()[0].Tag())
-	assert.Len(t, root.Children()[0].Children(), 0)
+	require.Equal(t, "img", root.Children()[0].Tag())
+	require.Len(t, root.Children()[0].Children(), 0)
 }
 
 func TestParseNestedWithSelfClosingElement(t *testing.T) {
@@ -143,10 +143,10 @@ func TestParseNestedWithSelfClosingElement(t *testing.T) {
 
 	checkParserErrors(t, p)
 
-	assert.Len(t, root.Children(), 1)
-	assert.Len(t, root.Children()[0].Children(), 2)
+	require.Len(t, root.Children(), 1)
+	require.Len(t, root.Children()[0].Children(), 2)
 
-	assert.Equal(t, "div", root.Children()[0].Tag())
-	assert.Equal(t, "img", root.Children()[0].Children()[0].Tag())
-	assert.Equal(t, "hr", root.Children()[0].Children()[1].Tag())
+	require.Equal(t, "div", root.Children()[0].Tag())
+	require.Equal(t, "img", root.Children()[0].Children()[0].Tag())
+	require.Equal(t, "hr", root.Children()[0].Children()[1].Tag())
 }

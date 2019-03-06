@@ -5,7 +5,7 @@ import (
 
 	"github.com/Gonzih/wasm-mk2/component"
 	"github.com/Gonzih/wasm-mk2/event"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type MyDiv struct {
@@ -36,39 +36,39 @@ func (c *MyDivTwo) HandleClick(e *event.Event) {
 
 func TestBasicLookup(t *testing.T) {
 	w, err := component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	wrapper, err := w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	s := New(wrapper, nil)
 	getter, ok := s.Getter("Counter")
-	assert.True(t, ok)
-	assert.Equal(t, 11, getter())
+	require.True(t, ok)
+	require.Equal(t, 11, getter())
 
 	getter, ok = s.Getter("Input")
-	assert.True(t, ok)
-	assert.Equal(t, "MyDiv", getter())
+	require.True(t, ok)
+	require.Equal(t, "MyDiv", getter())
 }
 
 func TestRecursiveLookup(t *testing.T) {
 	w, err := component.Wasmify(&MyDivTwo{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	wrapper, err := w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	sParent := New(wrapper, nil)
 
 	w, err = component.Wasmify(&MyDiv{})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	wrapper, err = w.Instance()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	s := New(wrapper, sParent)
 
 	handler, ok := s.Handler("HandleClick")
-	assert.True(t, ok)
+	require.True(t, ok)
 	handler(&event.Event{})
 
 	getter, ok := s.Getter("Num")
-	assert.True(t, ok)
-	assert.Equal(t, 1999, getter())
+	require.True(t, ok)
+	require.Equal(t, 1999, getter())
 }
